@@ -8,6 +8,10 @@ services:
     container_name: fast-agentic-rag-backend
     ports:
       - "8000:8000"
+    environment:
+      - STATIC_ROOT=/app/static
+    volumes:
+      - ./static-images:/app/static/images
     env_file:
       - .env
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
