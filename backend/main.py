@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -6,10 +7,13 @@ from fastapi.staticfiles import StaticFiles
 
 
 APP_ROOT = Path(__file__).parent
-STATIC_IMAGES_DIR = APP_ROOT / "static" / "images"
+DEFAULT_STATIC_ROOT = APP_ROOT / "static"
+STATIC_ROOT = Path(os.environ.get("STATIC_ROOT", str(DEFAULT_STATIC_ROOT)))
+STATIC_IMAGES_DIR = STATIC_ROOT / "images"
 
 
 def ensure_static_dirs() -> None:
+    STATIC_ROOT.mkdir(parents=True, exist_ok=True)
     STATIC_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -19,7 +23,7 @@ app = FastAPI(title="Fast Agentic RAG Backend")
 
 app.mount(
     "/static",
-    StaticFiles(directory=str(APP_ROOT / "static")),
+    StaticFiles(directory=str(STATIC_ROOT)),
     name="static",
 )
 
