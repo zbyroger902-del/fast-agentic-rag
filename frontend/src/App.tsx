@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FloatingAgentSidebar } from "./features/agent/FloatingAgentSidebar";
 import { KnowledgeBasePage } from "./features/kb/KnowledgeBasePage";
 import { WorkflowCanvasPage } from "./features/workflow/WorkflowCanvasPage";
+import { TracingPage } from "./features/tracing/TracingPage";
 
 type MainView = "chat" | "kb" | "workflow" | "tracing";
 
@@ -52,7 +53,7 @@ export const App: React.FC = () => {
             {view === "chat" && <ChatLanding />}
             {view === "kb" && <KnowledgeBasePage />}
             {view === "workflow" && <WorkflowCanvasPage />}
-            {view === "tracing" && <TracingLanding />}
+            {view === "tracing" && <TracingPage />}
           </main>
         </div>
 
