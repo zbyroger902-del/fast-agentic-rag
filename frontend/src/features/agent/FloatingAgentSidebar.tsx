@@ -126,7 +126,7 @@ export const FloatingAgentSidebar: React.FC = () => {
           handleSend();
         }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
           <label className="inline-flex items-center gap-1 rounded-full border border-slate-700 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-900 cursor-pointer">
             <Paperclip className="h-3 w-3" />
             <span className="truncate max-w-[120px]">{fileLabel}</span>
@@ -137,13 +137,14 @@ export const FloatingAgentSidebar: React.FC = () => {
             />
           </label>
 
-          <input
-            type="text"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            placeholder="Ask anything..."
-            className="flex-1 rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          />
+          <div className="flex min-h-[3.5rem] flex-1 items-center rounded-xl border border-slate-800 bg-slate-950/80 px-1.5">
+            <textarea
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="Ask, Search or Chat..."
+              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 placeholder:text-muted-foreground flex field-sizing-content min-h-16 w-full px-2.5 text-base transition-colors outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent"
+            />
+          </div>
 
           <button
             type="submit"
