@@ -2,8 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .field-sizing-content {
+    field-sizing: content;
+  }
+}
+
 :root {
   color-scheme: dark;
+  --radius: 0.75rem;
 }
 
 body {

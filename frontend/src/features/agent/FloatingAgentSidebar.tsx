@@ -1,5 +1,12 @@
-import React, { useMemo, useState } from "react";
-import { MessageCircle, Paperclip, Send, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { ArrowUp, MessageCircle, Paperclip, X } from "lucide-react";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
+import { cn } from "@/lib/utils";
 
 type Role = "user" | "agent";
 
@@ -14,30 +21,28 @@ export const FloatingAgentSidebar: React.FC = () => {
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const fileLabel = useMemo(() => file?.name ?? "Attach file", [file]);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = () => {
-    if (!input.trim() && !file) {
-      return;
-    }
+    if (!input.trim() && !file) return;
 
     setMessages((prev) => {
       const next: ChatMessage[] = [...prev];
 
       if (input.trim()) {
-        next.push({
-          id: Date.now(),
-          role: "user",
-          text: input.trim(),
-        });
+        next.push({ id: Date.now(), role: "user", text: input.trim() });
       }
 
       if (!input.trim() && file) {
         next.push({
           id: Date.now() + 1,
           role: "agent",
-          text: `I see you uploaded “${file.name}”. Do you want me to add this to the Knowledge Base, or just answer questions about it?`,
+          text: `I see you uploaded "${file.name}". Do you want me to add this to the Knowledge Base, or just answer questions about it?`,
         });
       } else if (input.trim()) {
         next.push({
@@ -51,11 +56,19 @@ export const FloatingAgentSidebar: React.FC = () => {
     });
 
     setInput("");
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = event.target.files?.[0];
-    setFile(selected ?? null);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files?.[0] ?? null);
   };
 
   if (!isOpen) {
@@ -73,6 +86,7 @@ export const FloatingAgentSidebar: React.FC = () => {
 
   return (
     <div className="flex h-full w-full flex-col bg-slate-950/90">
+      {/* Header */}
       <header className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
         <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-200">
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30">
@@ -90,9 +104,10 @@ export const FloatingAgentSidebar: React.FC = () => {
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2 text-xs">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 text-xs">
         {messages.length === 0 ? (
-          <p className="text-slate-500">
+          <p className="text-slate-500 text-center pt-4 leading-relaxed">
             Start a conversation or drop a file. When you upload a document
             without typing anything, the agent will ask whether to add it to the
             Knowledge Base or just use it for this chat.
@@ -101,62 +116,101 @@ export const FloatingAgentSidebar: React.FC = () => {
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${
-                message.role === "user" ? "justify-end" : "justify-start"
-              }`}
+              className={cn(
+                "flex",
+                message.role === "user" ? "justify-end" : "justify-start",
+              )}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-3 py-2 ${
+                className={cn(
+                  "max-w-[82%] rounded-2xl px-3 py-2 leading-relaxed",
                   message.role === "user"
                     ? "bg-slate-200 text-slate-900"
-                    : "bg-slate-900 text-slate-100 border border-slate-800"
-                }`}
+                    : "bg-slate-900 text-slate-100 border border-slate-800",
+                )}
               >
                 {message.text}
               </div>
             </div>
           ))
         )}
+        <div ref={messagesEndRef} />
       </div>
 
-      <form
-        className="border-t border-slate-800 px-3 py-2 space-y-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleSend();
-        }}
-      >
-        <div className="flex items-end gap-2">
-          <label className="inline-flex items-center gap-1 rounded-full border border-slate-700 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-900 cursor-pointer">
-            <Paperclip className="h-3 w-3" />
-            <span className="truncate max-w-[120px]">{fileLabel}</span>
+      {/* ChatGPT-style Prompt Form */}
+      <div className="border-t border-slate-800 px-3 py-3">
+        <InputGroup>
+          {/* Top addon: file attach + agent mode label */}
+          <InputGroupAddon align="block-start" className="divide-slate-800">
+            <InputGroupButton
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach file"
+            >
+              <Paperclip className="h-3.5 w-3.5" />
+              <span>Attach</span>
+            </InputGroupButton>
+
             <input
+              ref={fileInputRef}
               type="file"
               className="hidden"
               onChange={handleFileChange}
             />
-          </label>
 
-          <div className="flex min-h-[3.5rem] flex-1 items-center rounded-xl border border-slate-800 bg-slate-950/80 px-1.5">
-            <textarea
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask, Search or Chat..."
-              className="border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 placeholder:text-muted-foreground flex field-sizing-content min-h-16 w-full px-2.5 text-base transition-colors outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent"
-            />
-          </div>
+            <span className="ml-1 text-slate-700 select-none">/</span>
 
-          <button
-            type="submit"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
-            disabled={!input.trim() && !file}
-            aria-label="Send message"
-          >
-            <Send className="h-3 w-3" />
-          </button>
-        </div>
-      </form>
+            <InputGroupButton className="text-slate-500">
+              Agent Mode
+            </InputGroupButton>
+          </InputGroupAddon>
+
+          {/* Auto-growing textarea */}
+          <InputGroupTextarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask, Search or Chat..."
+          />
+
+          {/* Bottom addon: optional file chip + send button */}
+          <InputGroupAddon align="block-end">
+            {file && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-800/60 px-2 py-0.5 text-[10px] text-slate-300 hover:border-slate-600 transition-colors"
+                title="Remove file"
+              >
+                <span className="max-w-[100px] truncate">{file.name}</span>
+                <X className="h-2.5 w-2.5 shrink-0" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={!input.trim() && !file}
+              aria-label="Send message"
+              className={cn(
+                "ml-auto inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50",
+                input.trim() || file
+                  ? "bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                  : "bg-slate-800 text-slate-600 cursor-not-allowed",
+              )}
+            >
+              <ArrowUp className="h-3.5 w-3.5" />
+            </button>
+          </InputGroupAddon>
+        </InputGroup>
+
+        <p className="mt-1.5 text-center text-[10px] text-slate-600">
+          Enter to send · Shift+Enter for new line
+        </p>
+      </div>
     </div>
   );
-}
-
+};
