@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FloatingAgentSidebar } from "./features/agent/FloatingAgentSidebar";
 import { KnowledgeBasePage } from "./features/kb/KnowledgeBasePage";
+import { WorkflowCanvasPage } from "./features/workflow/WorkflowCanvasPage";
 
 type MainView = "chat" | "kb" | "workflow" | "tracing";
 
@@ -50,7 +51,7 @@ export const App: React.FC = () => {
           <main className="flex-1 overflow-hidden px-6 py-4">
             {view === "chat" && <ChatLanding />}
             {view === "kb" && <KnowledgeBasePage />}
-            {view === "workflow" && <WorkflowLanding />}
+            {view === "workflow" && <WorkflowCanvasPage />}
             {view === "tracing" && <TracingLanding />}
           </main>
         </div>
