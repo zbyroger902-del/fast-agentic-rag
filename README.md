@@ -19,3 +19,28 @@ Fast Agentic RAG is an open-source Retrieval-Augmented Generation (RAG) system a
 - `requirements.txt` — Python backend dependencies.
 
 Docker and Railway deployment configuration will live alongside the backend and frontend, with a root-level `docker-compose.yml` to support local development.
+
+## Backend: Local Python Environment
+
+The backend is designed to run on **Python 3.11**, matching the `python:3.11-slim` base image used by `backend/Dockerfile`.
+
+### One-time setup (local)
+
+From the project root:
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Running the backend locally
+
+With the virtual environment activated, start the FastAPI app:
+
+```bash
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+This mirrors the command used in the Docker image (minus `--reload`) so local behavior is close to what runs in Railway.
