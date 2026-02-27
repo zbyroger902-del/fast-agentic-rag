@@ -58,7 +58,10 @@ export const App: React.FC = () => {
         </div>
 
         {/* Right-side agent container */}
-        <aside className="hidden md:flex w-80 border-l border-slate-800 bg-slate-950/80 backdrop-blur-sm">
+        <aside
+          style={{ display: "flex", width: "320px", flexShrink: 0 }}
+          className="border-l border-slate-800 bg-slate-950/80 backdrop-blur-sm"
+        >
           <FloatingAgentSidebar />
         </aside>
       </div>
