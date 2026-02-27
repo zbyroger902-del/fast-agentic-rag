@@ -15,7 +15,7 @@ export const App: React.FC = () => {
         {/* Main column */}
         <div className="flex flex-1 flex-col">
           {/* Top navigation */}
-          <header className="border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+          <header className="flex items-center justify-between border-b border-slate-800 px-6 py-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold tracking-tight text-slate-200">
                 Fast Agentic RAG
@@ -24,7 +24,7 @@ export const App: React.FC = () => {
                 UI Alpha
               </span>
             </div>
-            <nav className="flex items-center gap-1 text-sm">
+            <nav className="flex items-center gap-1 text-sm rounded-full bg-slate-900/70 p-1 ring-1 ring-slate-800">
               <NavTab
                 label="Chat"
                 isActive={view === "chat"}
