@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FloatingAgentSidebar } from "./features/agent/FloatingAgentSidebar";
 
 type MainView = "chat" | "kb" | "workflow" | "tracing";
 
@@ -53,13 +54,9 @@ export const App: React.FC = () => {
           </main>
         </div>
 
-        {/* Right-side agent container (will host FloatingAgentSidebar) */}
+        {/* Right-side agent container */}
         <aside className="hidden md:flex w-80 border-l border-slate-800 bg-slate-950/80 backdrop-blur-sm">
-          <div className="flex h-full w-full items-center justify-center px-4 text-center text-xs text-slate-500">
-            Agent sidebar placeholder
-            <br />
-            (to be implemented next)
-          </div>
+          <FloatingAgentSidebar />
         </aside>
       </div>
     </div>
