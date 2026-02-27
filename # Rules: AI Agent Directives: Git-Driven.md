@@ -28,7 +28,7 @@ Because we are working in Cursor, you cannot safely run `git commit` in the term
 When you finish writing the code for a single step, you MUST do the following:
 1. Provide the exact terminal command to run tests/linters so I can verify the step works.
 2. Generate the strict commit message for this atomic step inside a markdown code block (so I can easily copy it).
-3. Instruct me to: "Keep the changes' in Cursor, verify the code, commit using the message below. And then you can proceed to the next step.
+3. Instruct me to: "Keep the changes' in Cursor, verify the code, commit using the message below. After I have accepted the changes, you can directly proceed to the next step without notification.
 
 ## STRICT COMMIT MESSAGE FORMAT (For the Code Block)
 **Line 1 (The What):** Conventional commit format (e.g., `feat: add PyMuPDF base class`).
@@ -38,7 +38,7 @@ When you finish writing the code for a single step, you MUST do the following:
 - How you solved it (the architectural decision).
 - What step this fulfills in the current plan.
 
-**Example of your required output at the end of Phase 4:**
+**Example of your required output at the end of Phase 3:**
 
 Please click 'Keep' in Cursor, run `pytest tests/test_parser.py`, and if it passes, commit your changes using this message:
 
