@@ -45,6 +45,17 @@ uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 
 This mirrors the command used in the Docker image (minus `--reload`) so local behavior is close to what runs in Railway.
 
+### Backend Docker usage (local)
+
+You can also run the backend via Docker, using the existing `backend/Dockerfile`:
+
+```bash
+docker build -t fast-agentic-rag-backend -f backend/Dockerfile .
+docker run -p 8000:8000 fast-agentic-rag-backend
+```
+
+This builds the same image that Railway will use and exposes port `8000` on your machine.
+
 ## Backend Configuration & Environment Variables
 
 The backend currently uses a small set of environment variables and is expected to grow as RAG features are added.
@@ -71,5 +82,14 @@ For Railway deployments:
 - Configure all necessary environment variables via the Railway dashboard for the backend service:
   - `STATIC_ROOT=/app/static` (optional; defaults are usually fine).
   - Any secrets or external service URLs (vector DB, LLM provider, observability, etc.).
+
+To deploy the backend on Railway using Docker:
+
+1. Connect this repository to a new **Railway service**.
+2. Configure the service to build from `backend/Dockerfile` (Railway can usually detect this automatically).
+3. Ensure port `8000` is exposed (the Dockerfile already does `EXPOSE 8000`, and Railway will route traffic to it).
+4. Set the required environment variables in the Railway dashboard as described above.
+
+This keeps the Railway deployment closely aligned with how you build and run the backend locally.
 
 This keeps local and production configuration conceptually aligned while keeping secrets out of version control.
