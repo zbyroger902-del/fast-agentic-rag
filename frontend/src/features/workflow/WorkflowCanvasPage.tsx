@@ -1,10 +1,14 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import ReactFlow, {
+  addEdge,
   Background,
+  Connection,
   Controls,
   Edge,
+  Handle,
   Node,
   NodeProps,
+  Position,
   useEdgesState,
   useNodesState,
 } from "reactflow";
@@ -73,6 +77,14 @@ const initialEdges: Edge[] = [
   { id: "e-4", source: "n-llm", target: "n-output" },
 ];
 
+const handleStyle: React.CSSProperties = {
+  width: 10,
+  height: 10,
+  background: "#64748b",
+  border: "2px solid #1e293b",
+  borderRadius: "50%",
+};
+
 const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data }) => {
   const badge = useMemo(() => {
     switch (data.type) {
@@ -91,22 +103,43 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data }) => {
     }
   }, [data.type]);
 
+  const hasTarget = data.type !== "input";
+  const hasSource = data.type !== "output";
+
   return (
-    <Card className="min-w-[160px] rounded-xl border-border bg-card px-3 py-2 shadow-sm">
-      <CardContent className="p-0">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-medium text-foreground">{data.label}</p>
-          <Badge variant="secondary" className="text-[10px]">
-            {badge}
-          </Badge>
-        </div>
-        {data.description && (
-          <p className="mt-1 text-[11px] text-muted-foreground line-clamp-3">
-            {data.description}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+    <>
+      {hasTarget && (
+        <Handle
+          type="target"
+          position={Position.Left}
+          style={handleStyle}
+        />
+      )}
+
+      <Card className="min-w-[160px] rounded-xl border-border bg-card px-3 py-2 shadow-sm">
+        <CardContent className="p-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-foreground">{data.label}</p>
+            <Badge variant="secondary" className="text-[10px]">
+              {badge}
+            </Badge>
+          </div>
+          {data.description && (
+            <p className="mt-1 text-[11px] text-muted-foreground line-clamp-3">
+              {data.description}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {hasSource && (
+        <Handle
+          type="source"
+          position={Position.Right}
+          style={handleStyle}
+        />
+      )}
+    </>
   );
 };
 
@@ -122,6 +155,12 @@ export const WorkflowCanvasPage: React.FC = () => {
     initialNodes[0]?.id ?? null,
   );
 
+  const onConnect = useCallback(
+    (connection: Connection) =>
+      setEdges((current) => addEdge(connection, current)),
+    [setEdges],
+  );
+
   const selectedNode = useMemo(
     () => nodes.find((node) => node.id === selectedNodeId) ?? null,
     [nodes, selectedNodeId],
@@ -135,6 +174,7 @@ export const WorkflowCanvasPage: React.FC = () => {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
           nodeTypes={nodeTypes}
           fitView
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
