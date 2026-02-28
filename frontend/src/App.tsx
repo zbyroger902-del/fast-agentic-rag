@@ -26,11 +26,6 @@ export const App: React.FC = () => {
             </div>
             <nav className="flex items-center gap-1 text-sm rounded-full bg-slate-900/70 p-1 ring-1 ring-slate-800">
               <NavTab
-                label="Chat"
-                isActive={view === "chat"}
-                onClick={() => setView("chat")}
-              />
-              <NavTab
                 label="Knowledge Base"
                 isActive={view === "kb"}
                 onClick={() => setView("kb")}
