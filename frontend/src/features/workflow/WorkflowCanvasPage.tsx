@@ -25,6 +25,40 @@ interface WorkflowNodeData {
   label: string;
   type: WorkflowNodeType;
   description?: string;
+  /** Display names for each input port (left handles). */
+  inputVariables: string[];
+  /** Display names for each output port (right handles). */
+  outputVariables: string[];
+}
+
+function getDefaultVariablesForType(
+  type: WorkflowNodeType
+): { inputVariables: string[]; outputVariables: string[] } {
+  switch (type) {
+    case "input":
+      return { inputVariables: [], outputVariables: ["message"] };
+    case "retriever":
+      return { inputVariables: ["query"], outputVariables: ["chunks"] };
+    case "tool":
+      return { inputVariables: ["input"], outputVariables: ["result"] };
+    case "llm":
+      return {
+        inputVariables: ["messages", "context"],
+        outputVariables: ["response"],
+      };
+    case "output":
+      return { inputVariables: ["response"], outputVariables: [] };
+    default:
+      return { inputVariables: [], outputVariables: [] };
+  }
+}
+
+/** Stable handle id for a node's input/output by index. */
+export function getInputHandleId(nodeId: string, index: number): string {
+  return `${nodeId}-in-${index}`;
+}
+export function getOutputHandleId(nodeId: string, index: number): string {
+  return `${nodeId}-out-${index}`;
 }
 
 const initialNodes: Node<WorkflowNodeData>[] = [
@@ -35,6 +69,7 @@ const initialNodes: Node<WorkflowNodeData>[] = [
       label: "User Input",
       type: "input",
       description: "Entry point for user messages and tool triggers.",
+      ...getDefaultVariablesForType("input"),
     },
     type: "workflowNode",
   },
@@ -45,6 +80,7 @@ const initialNodes: Node<WorkflowNodeData>[] = [
       label: "Retrieve",
       type: "retriever",
       description: "Calls RAG retriever to fetch top-k chunks.",
+      ...getDefaultVariablesForType("retriever"),
     },
     type: "workflowNode",
   },
@@ -55,6 +91,7 @@ const initialNodes: Node<WorkflowNodeData>[] = [
       label: "LLM Call",
       type: "llm",
       description: "Qwen-3.5-Plus generates the final answer.",
+      ...getDefaultVariablesForType("llm"),
     },
     type: "workflowNode",
   },
@@ -65,16 +102,41 @@ const initialNodes: Node<WorkflowNodeData>[] = [
       label: "Final Response",
       type: "output",
       description: "Response returned to the chat client.",
+      ...getDefaultVariablesForType("output"),
     },
     type: "workflowNode",
   },
 ];
 
 const initialEdges: Edge[] = [
-  { id: "e-1", source: "n-input", target: "n-retrieve" },
-  { id: "e-2", source: "n-input", target: "n-llm" },
-  { id: "e-3", source: "n-retrieve", target: "n-llm" },
-  { id: "e-4", source: "n-llm", target: "n-output" },
+  {
+    id: "e-1",
+    source: "n-input",
+    target: "n-retrieve",
+    sourceHandle: getOutputHandleId("n-input", 0),
+    targetHandle: getInputHandleId("n-retrieve", 0),
+  },
+  {
+    id: "e-2",
+    source: "n-input",
+    target: "n-llm",
+    sourceHandle: getOutputHandleId("n-input", 0),
+    targetHandle: getInputHandleId("n-llm", 0),
+  },
+  {
+    id: "e-3",
+    source: "n-retrieve",
+    target: "n-llm",
+    sourceHandle: getOutputHandleId("n-retrieve", 0),
+    targetHandle: getInputHandleId("n-llm", 1),
+  },
+  {
+    id: "e-4",
+    source: "n-llm",
+    target: "n-output",
+    sourceHandle: getOutputHandleId("n-llm", 0),
+    targetHandle: getInputHandleId("n-output", 0),
+  },
 ];
 
 const handleStyle: React.CSSProperties = {
@@ -85,7 +147,7 @@ const handleStyle: React.CSSProperties = {
   borderRadius: "50%",
 };
 
-const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data }) => {
+const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ id, data }) => {
   const badge = useMemo(() => {
     switch (data.type) {
       case "input":
@@ -103,18 +165,23 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data }) => {
     }
   }, [data.type]);
 
-  const hasTarget = data.type !== "input";
-  const hasSource = data.type !== "output";
+  const inputs = data.inputVariables ?? [];
+  const outputs = data.outputVariables ?? [];
 
   return (
     <>
-      {hasTarget && (
+      {inputs.map((_, index) => (
         <Handle
+          key={getInputHandleId(id, index)}
           type="target"
           position={Position.Left}
-          style={handleStyle}
+          id={getInputHandleId(id, index)}
+          style={{
+            ...handleStyle,
+            top: inputs.length > 1 ? `${((index + 1) / (inputs.length + 1)) * 100}%` : "50%",
+          }}
         />
-      )}
+      ))}
 
       <Card className="min-w-[160px] rounded-xl border-border bg-card px-3 py-2 shadow-sm">
         <CardContent className="p-0">
@@ -132,13 +199,18 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data }) => {
         </CardContent>
       </Card>
 
-      {hasSource && (
+      {outputs.map((_, index) => (
         <Handle
+          key={getOutputHandleId(id, index)}
           type="source"
           position={Position.Right}
-          style={handleStyle}
+          id={getOutputHandleId(id, index)}
+          style={{
+            ...handleStyle,
+            top: outputs.length > 1 ? `${((index + 1) / (outputs.length + 1)) * 100}%` : "50%",
+          }}
         />
-      )}
+      ))}
     </>
   );
 };
@@ -166,6 +238,26 @@ export const WorkflowCanvasPage: React.FC = () => {
     [nodes, selectedNodeId],
   );
 
+  /** For a given node and its input handle index, return the source node label and output var name if connected. */
+  const getConnectionForInput = useCallback(
+    (nodeId: string, inputIndex: number): { sourceLabel: string; outputVar: string } | null => {
+      const targetHandle = getInputHandleId(nodeId, inputIndex);
+      const edge = edges.find(
+        (e) => e.target === nodeId && e.targetHandle === targetHandle
+      );
+      if (!edge?.sourceHandle || !edge.source) return null;
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      if (!sourceNode) return null;
+      const outIndex = sourceNode.data.outputVariables
+        ? parseInt(edge.sourceHandle.split("-out-")[1] ?? "", 10)
+        : 0;
+      const outputVar =
+        sourceNode.data.outputVariables?.[outIndex] ?? `out-${outIndex}`;
+      return { sourceLabel: sourceNode.data.label, outputVar };
+    },
+    [edges, nodes],
+  );
+
   return (
     <div className="flex h-full gap-4">
       <Card className="flex-1 min-w-0 overflow-hidden border-border bg-card">
@@ -178,6 +270,7 @@ export const WorkflowCanvasPage: React.FC = () => {
           nodeTypes={nodeTypes}
           fitView
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+          deleteKeyCode={["Backspace", "Delete"]}
         >
           <Background gap={16} color="#334155" />
           <Controls />
@@ -238,14 +331,102 @@ export const WorkflowCanvasPage: React.FC = () => {
                   className="resize-none text-xs"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  Input variables
+                </Label>
+                <div className="space-y-1.5">
+                  {(selectedNode.data.inputVariables ?? []).map((name, index) => {
+                    const conn = getConnectionForInput(selectedNode.id, index);
+                    return (
+                      <div key={index} className="space-y-0.5">
+                        <Input
+                          value={name}
+                          onChange={(event) => {
+                            const next = event.target.value;
+                            setNodes((current) =>
+                              current.map((node) =>
+                                node.id === selectedNode.id
+                                  ? {
+                                      ...node,
+                                      data: {
+                                        ...node.data,
+                                        inputVariables: (node.data.inputVariables ?? []).map(
+                                          (v, i) => (i === index ? next : v)
+                                        ),
+                                      },
+                                    }
+                                  : node,
+                              ),
+                            );
+                          }}
+                          className="h-8 text-xs"
+                          placeholder={`Input ${index + 1}`}
+                        />
+                        {conn && (
+                          <p className="text-[10px] text-muted-foreground">
+                            ← {conn.sourceLabel}.{conn.outputVar}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {(selectedNode.data.inputVariables ?? []).length === 0 && (
+                    <p className="text-[11px] text-muted-foreground">
+                      No input variables.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  Output variables
+                </Label>
+                <div className="space-y-1.5">
+                  {(selectedNode.data.outputVariables ?? []).map((name, index) => (
+                    <Input
+                      key={index}
+                      value={name}
+                      onChange={(event) => {
+                        const next = event.target.value;
+                        setNodes((current) =>
+                          current.map((node) =>
+                            node.id === selectedNode.id
+                              ? {
+                                  ...node,
+                                  data: {
+                                    ...node.data,
+                                    outputVariables: (node.data.outputVariables ?? []).map(
+                                      (v, i) => (i === index ? next : v)
+                                    ),
+                                  },
+                                }
+                              : node,
+                          ),
+                        );
+                      }}
+                      className="h-8 text-xs"
+                      placeholder={`Output ${index + 1}`}
+                    />
+                  ))}
+                  {(selectedNode.data.outputVariables ?? []).length === 0 && (
+                    <p className="text-[11px] text-muted-foreground">
+                      No output variables.
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <p className="text-[11px] text-muted-foreground">
-                These settings are local-only for now. Later they will map to
-                LangGraph node configuration and execution parameters.
+                Connect nodes by dragging from an output handle to an input handle.
+                Select an edge and press Delete or Backspace to remove it.
               </p>
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Select a node on the canvas to edit its label and description.
+              Select a node to edit its label, description, and input/output variables.
             </p>
           )}
         </CardContent>
