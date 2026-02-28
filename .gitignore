@@ -27,3 +27,4 @@ out/
 
 *.sqlite3
 *.db
+.agents/skills/josechifflet-shadcn-ui/SKILL.md

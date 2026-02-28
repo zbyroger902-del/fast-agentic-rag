@@ -1,5 +1,5 @@
 ---
-description: shadcn/ui component patterns for Next.js 16 applications. This skill should be used when adding UI components, customizing component styles, composing primitives, or integrating forms with react-hook-form. Covers installation, customization, composition patterns, and Atlas-specific conventions using Tailwind CSS v4.
+description: shadcn/ui component patterns for Next.js/Vite 16 applications. This skill should be used when adding UI components, customizing component styles, composing primitives, or integrating forms with react-hook-form. Covers installation, customization, composition patterns, and Atlas-specific conventions using Tailwind CSS v4.
 alwaysApply: false
 ---
 
