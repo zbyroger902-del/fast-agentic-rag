@@ -9,6 +9,11 @@ import ReactFlow, {
   useNodesState,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type WorkflowNodeType = "input" | "retriever" | "tool" | "llm" | "output";
 
@@ -87,19 +92,21 @@ const WorkflowNode: React.FC<NodeProps<WorkflowNodeData>> = ({ data }) => {
   }, [data.type]);
 
   return (
-    <div className="min-w-[160px] rounded-xl border border-slate-700 bg-slate-900/90 px-3 py-2 shadow-sm">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-slate-100">{data.label}</p>
-        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] text-slate-300">
-          {badge}
-        </span>
-      </div>
-      {data.description && (
-        <p className="mt-1 text-[11px] text-slate-400 line-clamp-3">
-          {data.description}
-        </p>
-      )}
-    </div>
+    <Card className="min-w-[160px] rounded-xl border-border bg-card px-3 py-2 shadow-sm">
+      <CardContent className="p-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-medium text-foreground">{data.label}</p>
+          <Badge variant="secondary" className="text-[10px]">
+            {badge}
+          </Badge>
+        </div>
+        {data.description && (
+          <p className="mt-1 text-[11px] text-muted-foreground line-clamp-3">
+            {data.description}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -122,7 +129,7 @@ export const WorkflowCanvasPage: React.FC = () => {
 
   return (
     <div className="flex h-full gap-4">
-      <div className="flex-1 min-w-0 rounded-lg border border-slate-800 bg-slate-900/40">
+      <Card className="flex-1 min-w-0 overflow-hidden border-border bg-card">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -132,73 +139,77 @@ export const WorkflowCanvasPage: React.FC = () => {
           fitView
           onNodeClick={(_, node) => setSelectedNodeId(node.id)}
         >
-          <Background gap={16} color="#1f2937" />
+          <Background gap={16} color="#334155" />
           <Controls />
         </ReactFlow>
-      </div>
+      </Card>
 
-      <div className="w-80 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-3 text-xs">
-        <p className="font-medium text-slate-100">Node settings</p>
-        {selectedNode ? (
-          <div className="mt-3 space-y-2">
-            <div>
-              <label className="block text-[11px] text-slate-400">
-                Label
-              </label>
-              <input
-                type="text"
-                value={selectedNode.data.label}
-                onChange={(event) => {
-                  const nextLabel = event.target.value;
-                  setNodes((current) =>
-                    current.map((node) =>
-                      node.id === selectedNode.id
-                        ? {
-                            ...node,
-                            data: { ...node.data, label: nextLabel },
-                          }
-                        : node,
-                    ),
-                  );
-                }}
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] text-slate-400">
-                Description
-              </label>
-              <textarea
-                value={selectedNode.data.description ?? ""}
-                onChange={(event) => {
-                  const nextDescription = event.target.value;
-                  setNodes((current) =>
-                    current.map((node) =>
-                      node.id === selectedNode.id
-                        ? {
-                            ...node,
-                            data: { ...node.data, description: nextDescription },
-                          }
-                        : node,
-                    ),
-                  );
-                }}
-                rows={4}
-                className="mt-1 w-full resize-none rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
-            <p className="text-[11px] text-slate-500">
-              These settings are local-only for now. Later they will map to
-              LangGraph node configuration and execution parameters.
+      <Card className="w-80 shrink-0">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Node settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {selectedNode ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="node-label" className="text-xs text-muted-foreground">
+                  Label
+                </Label>
+                <Input
+                  id="node-label"
+                  value={selectedNode.data.label}
+                  onChange={(event) => {
+                    const nextLabel = event.target.value;
+                    setNodes((current) =>
+                      current.map((node) =>
+                        node.id === selectedNode.id
+                          ? {
+                              ...node,
+                              data: { ...node.data, label: nextLabel },
+                            }
+                          : node,
+                      ),
+                    );
+                  }}
+                  className="h-8 text-xs"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="node-description" className="text-xs text-muted-foreground">
+                  Description
+                </Label>
+                <Textarea
+                  id="node-description"
+                  value={selectedNode.data.description ?? ""}
+                  onChange={(event) => {
+                    const nextDescription = event.target.value;
+                    setNodes((current) =>
+                      current.map((node) =>
+                        node.id === selectedNode.id
+                          ? {
+                              ...node,
+                              data: { ...node.data, description: nextDescription },
+                            }
+                          : node,
+                      ),
+                    );
+                  }}
+                  rows={4}
+                  className="resize-none text-xs"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                These settings are local-only for now. Later they will map to
+                LangGraph node configuration and execution parameters.
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Select a node on the canvas to edit its label and description.
             </p>
-          </div>
-        ) : (
-          <p className="mt-2 text-[11px] text-slate-500">
-            Select a node on the canvas to edit its label and description.
-          </p>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
-

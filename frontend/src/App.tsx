@@ -1,4 +1,13 @@
 import React, { useState } from "react";
+import {
+  Activity,
+  Database,
+  GitBranch,
+  MessageCircle,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FloatingAgentSidebar } from "./features/agent/FloatingAgentSidebar";
 import { KnowledgeBasePage } from "./features/kb/KnowledgeBasePage";
 import { WorkflowCanvasPage } from "./features/workflow/WorkflowCanvasPage";
@@ -10,37 +19,56 @@ export const App: React.FC = () => {
   const [view, setView] = useState<MainView>("chat");
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
+    <div className="min-h-screen bg-background text-foreground dark">
       <div className="flex h-screen">
         {/* Main column */}
         <div className="flex flex-1 flex-col">
           {/* Top navigation */}
-          <header className="flex items-center justify-between border-b border-slate-800 px-6 py-3">
+          <header className="flex items-center justify-between border-b border-border px-6 py-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold tracking-tight text-slate-200">
+              <span className="text-sm font-semibold tracking-tight text-foreground">
                 Fast Agentic RAG
               </span>
-              <span className="text-xs rounded-full border border-slate-700 px-2 py-0.5 text-slate-400">
+              <Badge variant="outline" className="text-xs font-normal">
                 UI Alpha
-              </span>
+              </Badge>
             </div>
-            <nav className="flex items-center gap-1 text-sm rounded-full bg-slate-900/70 p-1 ring-1 ring-slate-800">
-              <NavTab
-                label="Knowledge Base"
-                isActive={view === "kb"}
-                onClick={() => setView("kb")}
-              />
-              <NavTab
-                label="Workflow Canvas"
-                isActive={view === "workflow"}
-                onClick={() => setView("workflow")}
-              />
-              <NavTab
-                label="Tracing"
-                isActive={view === "tracing"}
-                onClick={() => setView("tracing")}
-              />
-            </nav>
+            <Tabs
+              value={view}
+              onValueChange={(v) => setView(v as MainView)}
+              className="w-auto"
+            >
+              <TabsList className="rounded-full bg-muted p-1">
+                <TabsTrigger
+                  value="chat"
+                  className="gap-1.5 rounded-full data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  Chat
+                </TabsTrigger>
+                <TabsTrigger
+                  value="kb"
+                  className="gap-1.5 rounded-full data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  <Database className="h-3.5 w-3.5" />
+                  Knowledge Base
+                </TabsTrigger>
+                <TabsTrigger
+                  value="workflow"
+                  className="gap-1.5 rounded-full data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  <GitBranch className="h-3.5 w-3.5" />
+                  Workflow Canvas
+                </TabsTrigger>
+                <TabsTrigger
+                  value="tracing"
+                  className="gap-1.5 rounded-full data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  <Activity className="h-3.5 w-3.5" />
+                  Tracing
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </header>
 
           {/* Main content area */}
@@ -55,34 +83,12 @@ export const App: React.FC = () => {
         {/* Right-side agent container */}
         <aside
           style={{ display: "flex", width: "320px", flexShrink: 0 }}
-          className="border-l border-slate-800 bg-slate-950/80 backdrop-blur-sm"
+          className="border-l border-border bg-background/95 backdrop-blur-sm"
         >
           <FloatingAgentSidebar />
         </aside>
       </div>
     </div>
-  );
-};
-
-interface NavTabProps {
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}
-
-const NavTab: React.FC<NavTabProps> = ({ label, isActive, onClick }) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-full px-3 py-1 transition-colors ${
-        isActive
-          ? "bg-slate-200 text-slate-900"
-          : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
-      }`}
-    >
-      {label}
-    </button>
   );
 };
 
@@ -92,8 +98,10 @@ const SectionShell: React.FC<{ title: string; subtitle: string }> = ({
 }) => (
   <div className="flex h-full items-center justify-center">
     <div className="max-w-xl text-center space-y-3">
-      <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
-      <p className="text-slate-300 text-sm">{subtitle}</p>
+      <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+        {title}
+      </h1>
+      <p className="text-muted-foreground text-sm">{subtitle}</p>
     </div>
   </div>
 );
@@ -104,25 +112,3 @@ const ChatLanding: React.FC = () => (
     subtitle="Chat with the agent while other tools run in the main canvas. The right sidebar will host the floating agent experience."
   />
 );
-
-const KnowledgeBaseLanding: React.FC = () => (
-  <SectionShell
-    title="Knowledge Base Manager"
-    subtitle="Upload documents, configure parsing, and inspect chunks and images. A data table, detail pane, and recall tester will live here."
-  />
-);
-
-const WorkflowLanding: React.FC = () => (
-  <SectionShell
-    title="Workflow Canvas"
-    subtitle="Design agentic workflows using a React Flow canvas with LangGraph-inspired nodes and settings."
-  />
-);
-
-const TracingLanding: React.FC = () => (
-  <SectionShell
-    title="Tracing & Observability"
-    subtitle="Inspect LangGraph runs and Langfuse traces in a nested table view grouped by session."
-  />
-);
-

@@ -1,4 +1,15 @@
 import React, { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface TraceStep {
   id: string;
@@ -82,72 +93,70 @@ export const TracingPage: React.FC = () => {
   );
 
   return (
-    <div className="flex h-full flex-col rounded-lg border border-slate-800 bg-slate-900/40 text-xs">
-      <div className="border-b border-slate-800 px-4 py-3">
-        <p className="font-medium text-slate-100">Tracing</p>
-        <p className="mt-0.5 text-[11px] text-slate-400">
+    <Card className="flex h-full flex-col overflow-hidden border-border bg-card text-xs">
+      <CardHeader className="border-b border-border py-3">
+        <CardTitle className="text-sm">Tracing</CardTitle>
+        <CardDescription>
           Sessions grouped by ID, expandable into LangGraph-style steps. Data is
           currently mocked; later this will be powered by Langfuse.
-        </p>
-      </div>
-      <div className="flex-1 overflow-auto">
-        <table className="min-w-full text-left">
-          <thead className="sticky top-0 bg-slate-900/80 backdrop-blur-sm">
-            <tr className="border-b border-slate-800 text-[11px] text-slate-400">
-              <th className="px-4 py-2 font-normal">Session</th>
-              <th className="px-4 py-2 font-normal">Created</th>
-              <th className="px-4 py-2 font-normal">Model</th>
-              <th className="px-4 py-2 font-normal">Steps</th>
-            </tr>
-          </thead>
-          <tbody>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-auto p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-[11px]">Session</TableHead>
+              <TableHead className="text-[11px]">Created</TableHead>
+              <TableHead className="text-[11px]">Model</TableHead>
+              <TableHead className="text-[11px]">Steps</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {mockSessions.map((session) => {
               const isExpanded = expandedSessionId === session.id;
               return (
                 <React.Fragment key={session.id}>
-                  <tr
-                    className="cursor-pointer border-b border-slate-800/60 text-[11px] hover:bg-slate-900"
+                  <TableRow
+                    className="cursor-pointer text-[11px] hover:bg-muted/50"
                     onClick={() =>
-                      setExpandedSessionId(
-                        isExpanded ? null : session.id,
-                      )
+                      setExpandedSessionId(isExpanded ? null : session.id)
                     }
                   >
-                    <td className="px-4 py-2 text-slate-100">
-                      <span className="font-medium">
+                    <TableCell>
+                      <span className="font-medium text-foreground">
                         {session.id}
                       </span>
-                      <span className="ml-2 text-slate-400">
+                      <span className="ml-2 text-muted-foreground">
                         {session.userLabel}
                       </span>
-                    </td>
-                    <td className="px-4 py-2 text-slate-300">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {session.createdAt}
-                    </td>
-                    <td className="px-4 py-2 text-slate-300">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {session.model}
-                    </td>
-                    <td className="px-4 py-2 text-slate-300">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {session.steps.length}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                   {isExpanded && (
-                    <tr>
-                      <td
+                    <TableRow>
+                      <TableCell
                         colSpan={4}
-                        className="bg-slate-950/80 px-6 py-3"
+                        className="bg-muted/30 px-6 py-3"
                       >
                         <NestedSteps steps={session.steps} />
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   )}
                 </React.Fragment>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -155,34 +164,33 @@ interface NestedStepsProps {
   steps: TraceStep[];
 }
 
+const stepTypeBadgeClass: Record<TraceStep["type"], string> = {
+  user: "bg-sky-500/10 text-sky-300 border-sky-500/30",
+  retrieve: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+  llm: "bg-purple-500/10 text-purple-300 border-purple-500/30",
+  tool: "bg-amber-500/10 text-amber-300 border-amber-500/30",
+};
+
 const NestedSteps: React.FC<NestedStepsProps> = ({ steps }) => (
-  <div className="space-y-1">
+  <div className="space-y-2">
     {steps.map((step) => (
-      <div
+      <Card
         key={step.id}
-        className="flex items-start justify-between rounded-md border border-slate-800 bg-slate-900/80 px-3 py-2"
+        className="flex items-start justify-between border-border bg-card/80 px-3 py-2"
       >
-        <div>
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ${
-              step.type === "user"
-                ? "bg-sky-500/10 text-sky-300 ring-1 ring-sky-500/30"
-                : step.type === "retrieve"
-                  ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30"
-                  : step.type === "llm"
-                    ? "bg-purple-500/10 text-purple-300 ring-1 ring-purple-500/30"
-                    : "bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/30"
-            }`}
+        <div className="min-w-0 flex-1">
+          <Badge
+            variant="outline"
+            className={cn("text-[10px]", stepTypeBadgeClass[step.type])}
           >
             {step.type.toUpperCase()}
-          </span>
-          <p className="mt-1 text-slate-100">{step.label}</p>
+          </Badge>
+          <p className="mt-1 text-foreground">{step.label}</p>
         </div>
-        <span className="ml-4 text-[11px] text-slate-500">
+        <span className="ml-4 shrink-0 text-[11px] text-muted-foreground">
           {step.timestamp}
         </span>
-      </div>
+      </Card>
     ))}
   </div>
 );
-

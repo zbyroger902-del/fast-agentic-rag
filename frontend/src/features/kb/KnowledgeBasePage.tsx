@@ -1,4 +1,32 @@
 import React, { useMemo, useState } from "react";
+import { Upload } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 type DocumentStatus = "ready" | "processing";
 
@@ -116,25 +144,25 @@ export const KnowledgeBasePage: React.FC = () => {
       </div>
 
       <div className="flex flex-1 gap-4 overflow-hidden">
-        <div className="flex-1 min-w-0 rounded-lg border border-slate-800 bg-slate-900/40">
+        <Card className="flex-1 min-w-0 flex flex-col overflow-hidden">
           <DocumentTable
             documents={mockDocuments}
             selectedId={selectedDocId}
             onSelect={setSelectedDocId}
           />
-        </div>
+        </Card>
 
         <div className="flex w-[420px] flex-col gap-4">
-          <div className="flex-1 min-h-0 rounded-lg border border-slate-800 bg-slate-900/40">
+          <Card className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <DocumentDetailView document={selectedDoc} chunks={selectedChunks} />
-          </div>
-          <div className="h-64 rounded-lg border border-slate-800 bg-slate-900/40">
+          </Card>
+          <Card className="h-64 flex flex-col overflow-hidden">
             <RecallTester
               query={recallQuery}
               onQueryChange={setRecallQuery}
               results={mockRecallResults}
             />
-          </div>
+          </Card>
         </div>
       </div>
     </div>
@@ -149,33 +177,51 @@ interface UploadAreaProps {
 const UploadArea: React.FC<UploadAreaProps> = ({
   uploadedFiles,
   onUploadChange,
-}) => (
-  <div className="flex-1 rounded-lg border border-dashed border-slate-700 bg-slate-900/40 px-4 py-3 text-xs">
-    <p className="font-medium text-slate-100">Upload documents</p>
-    <p className="mt-1 text-slate-400">
-      Drag &amp; drop files here, or click to choose. Files under 10MB will be
-      ingested into a temporary session knowledge base.
-    </p>
-    <label className="mt-3 inline-flex cursor-pointer items-center justify-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-900 hover:bg-slate-200">
-      <span>Browse files</span>
-      <input
-        type="file"
-        multiple
-        className="hidden"
-        onChange={onUploadChange}
-      />
-    </label>
-    {uploadedFiles.length > 0 && (
-      <ul className="mt-3 max-h-24 space-y-1 overflow-y-auto text-[11px] text-slate-300">
-        {uploadedFiles.map((file) => (
-          <li key={file.name} className="truncate">
-            {file.name}
-          </li>
-        ))}
-      </ul>
-    )}
-  </div>
-);
+}) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  return (
+    <Card className="flex-1 border-dashed">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <Upload className="h-4 w-4" />
+          Upload documents
+        </CardTitle>
+        <CardDescription>
+          Drag &amp; drop files here, or click to choose. Files under 10MB will
+          be ingested into a temporary session knowledge base.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={onUploadChange}
+          aria-hidden
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label="Browse files to upload"
+        >
+          Browse files
+        </Button>
+        {uploadedFiles.length > 0 && (
+          <ul className="mt-3 max-h-24 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+            {uploadedFiles.map((file) => (
+              <li key={file.name} className="truncate">
+                {file.name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 interface ConfigPanelProps {
   show: boolean;
@@ -198,59 +244,67 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
   rerank,
   onRerankChange,
 }) => (
-  <div className="w-64 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-3 text-xs">
-    <div className="flex items-center justify-between">
-      <p className="font-medium text-slate-100">Configuration</p>
-      <button
-        type="button"
-        onClick={onToggle}
-        className="text-[11px] text-slate-400 hover:text-slate-100"
-      >
-        {show ? "Hide" : "Show"}
-      </button>
-    </div>
-    {show && (
-      <div className="mt-3 space-y-3">
-        <div>
-          <label className="block text-[11px] text-slate-400">Engine</label>
-          <select
-            value={engine}
-            onChange={(event) => onEngineChange(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          >
-            <option value="Local (PyMuPDF + DOCX)">
-              Local (PyMuPDF + DOCX)
-            </option>
-            <option value="LlamaParse">LlamaParse</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-[11px] text-slate-400">Chunking</label>
-          <select
-            value={chunking}
-            onChange={(event) => onChunkingChange(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          >
-            <option value="semantic">Semantic</option>
-            <option value="fixed-512">Fixed (512 tokens)</option>
-            <option value="page">Per page</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-[11px] text-slate-400">Rerank</label>
-          <select
-            value={rerank}
-            onChange={(event) => onRerankChange(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-[11px] text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-          >
-            <option value="none">None</option>
-            <option value="cross-encoder">Cross-encoder</option>
-            <option value="llm">LLM rerank</option>
-          </select>
-        </div>
+  <Card className="w-64">
+    <CardHeader className="pb-2">
+      <div className="flex items-center justify-between">
+        <CardTitle className="text-sm">Configuration</CardTitle>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onToggle}
+          aria-label={show ? "Hide configuration" : "Show configuration"}
+          className="text-xs text-muted-foreground"
+        >
+          {show ? "Hide" : "Show"}
+        </Button>
       </div>
+    </CardHeader>
+    {show && (
+      <CardContent className="space-y-3 pt-0">
+        <div className="space-y-2">
+          <Label className="text-xs">Engine</Label>
+          <Select value={engine} onValueChange={onEngineChange}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Local (PyMuPDF + DOCX)">
+                Local (PyMuPDF + DOCX)
+              </SelectItem>
+              <SelectItem value="LlamaParse">LlamaParse</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Chunking</Label>
+          <Select value={chunking} onValueChange={onChunkingChange}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="semantic">Semantic</SelectItem>
+              <SelectItem value="fixed-512">Fixed (512 tokens)</SelectItem>
+              <SelectItem value="page">Per page</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Rerank</Label>
+          <Select value={rerank} onValueChange={onRerankChange}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="cross-encoder">Cross-encoder</SelectItem>
+              <SelectItem value="llm">LLM rerank</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardContent>
     )}
-  </div>
+  </Card>
 );
 
 interface DocumentTableProps {
@@ -265,54 +319,52 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
   onSelect,
 }) => (
   <div className="flex h-full flex-col text-xs">
-    <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
-      <p className="font-medium text-slate-100">Documents</p>
-      <p className="text-[11px] text-slate-400">
+    <div className="flex items-center justify-between border-b border-border px-3 py-2">
+      <p className="font-medium text-foreground">Documents</p>
+      <p className="text-[11px] text-muted-foreground">
         {documents.length} loaded
       </p>
     </div>
     <div className="flex-1 overflow-auto">
-      <table className="min-w-full text-left">
-        <thead className="sticky top-0 bg-slate-900/80 backdrop-blur-sm">
-          <tr className="border-b border-slate-800 text-[11px] text-slate-400">
-            <th className="px-3 py-2 font-normal">Name</th>
-            <th className="px-3 py-2 font-normal">Engine</th>
-            <th className="px-3 py-2 font-normal">Size</th>
-            <th className="px-3 py-2 font-normal">Status</th>
-            <th className="px-3 py-2 font-normal">Created</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-[11px]">Name</TableHead>
+            <TableHead className="text-[11px]">Engine</TableHead>
+            <TableHead className="text-[11px]">Size</TableHead>
+            <TableHead className="text-[11px]">Status</TableHead>
+            <TableHead className="text-[11px]">Created</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {documents.map((doc) => {
             const isSelected = doc.id === selectedId;
             return (
-              <tr
+              <TableRow
                 key={doc.id}
                 onClick={() => onSelect(doc.id)}
-                className={`cursor-pointer border-b border-slate-800/60 text-[11px] hover:bg-slate-900 ${
-                  isSelected ? "bg-slate-900" : ""
-                }`}
+                className={cn(
+                  "cursor-pointer text-[11px]",
+                  isSelected && "bg-muted",
+                )}
               >
-                <td className="px-3 py-2 text-slate-100">{doc.name}</td>
-                <td className="px-3 py-2 text-slate-300">{doc.engine}</td>
-                <td className="px-3 py-2 text-slate-300">{doc.size}</td>
-                <td className="px-3 py-2">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ${
-                      doc.status === "ready"
-                        ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30"
-                        : "bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/30"
-                    }`}
+                <TableCell className="text-foreground">{doc.name}</TableCell>
+                <TableCell className="text-muted-foreground">{doc.engine}</TableCell>
+                <TableCell className="text-muted-foreground">{doc.size}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={doc.status === "ready" ? "default" : "secondary"}
+                    className="text-[10px]"
                   >
                     {doc.status === "ready" ? "Ready" : "Processing"}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-slate-400">{doc.createdAt}</td>
-              </tr>
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{doc.createdAt}</TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   </div>
 );
@@ -327,35 +379,35 @@ const DocumentDetailView: React.FC<DocumentDetailViewProps> = ({
   chunks,
 }) => (
   <div className="flex h-full flex-col text-xs">
-    <div className="border-b border-slate-800 px-3 py-2">
-      <p className="font-medium text-slate-100">
+    <CardHeader className="border-b border-border py-3">
+      <CardTitle className="text-sm">
         {document ? document.name : "No document selected"}
-      </p>
-      <p className="mt-0.5 text-[11px] text-slate-400">
+      </CardTitle>
+      <CardDescription>
         Parsed chunks and image attachments for the selected document.
-      </p>
-    </div>
-    <div className="flex-1 overflow-auto px-3 py-2 space-y-2">
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="flex-1 overflow-auto py-3 space-y-2">
       {document ? (
         chunks.map((chunk) => (
           <div
             key={chunk.id}
-            className="rounded-md border border-slate-800 bg-slate-950/60 p-2"
+            className="rounded-md border border-border bg-muted/30 p-2"
           >
-            <p className="text-slate-100">{chunk.text}</p>
+            <p className="text-foreground">{chunk.text}</p>
             {chunk.imagePath && (
-              <div className="mt-2 rounded-md border border-slate-800 bg-slate-900/80 p-2 text-center text-[11px] text-slate-400">
+              <div className="mt-2 rounded-md border border-border bg-card p-2 text-center text-[11px] text-muted-foreground">
                 Image placeholder for <code>{chunk.imagePath}</code>
               </div>
             )}
           </div>
         ))
       ) : (
-        <p className="text-slate-500">
+        <p className="text-muted-foreground">
           Select a document from the table to inspect its chunks and images.
         </p>
       )}
-    </div>
+    </CardContent>
   </div>
 );
 
@@ -371,38 +423,41 @@ const RecallTester: React.FC<RecallTesterProps> = ({
   results,
 }) => (
   <div className="flex h-full flex-col text-xs">
-    <div className="border-b border-slate-800 px-3 py-2">
-      <p className="font-medium text-slate-100">Recall tester</p>
-      <p className="mt-0.5 text-[11px] text-slate-400">
+    <CardHeader className="border-b border-border py-3">
+      <CardTitle className="text-sm">Recall tester</CardTitle>
+      <CardDescription>
         Enter a query to preview how retrieved chunks (and their images) might
         look once backend retrieval is wired up.
-      </p>
-    </div>
-    <div className="flex flex-1 gap-2 px-3 py-2">
-      <div className="w-1/2 space-y-2">
-        <textarea
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="flex flex-1 gap-2 py-3 min-h-0">
+      <div className="w-1/2 flex flex-col gap-2 min-h-0">
+        <Label htmlFor="recall-query" className="sr-only">
+          Recall query
+        </Label>
+        <Textarea
+          id="recall-query"
           value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
+          onChange={(e) => onQueryChange(e.target.value)}
           placeholder="e.g. Show me how images are linked to chunks in the architecture docs."
-          className="h-full w-full resize-none rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          className="flex-1 min-h-0 resize-none text-xs"
         />
       </div>
       <div className="w-1/2 space-y-2 overflow-auto">
         {results.map((chunk) => (
           <div
             key={chunk.id}
-            className="rounded-md border border-slate-800 bg-slate-950/60 p-2"
+            className="rounded-md border border-border bg-muted/30 p-2"
           >
-            <p className="text-slate-100">{chunk.text}</p>
+            <p className="text-foreground">{chunk.text}</p>
             {chunk.imagePath && (
-              <div className="mt-2 rounded-md border border-slate-800 bg-slate-900/80 p-2 text-center text-[11px] text-slate-400">
+              <div className="mt-2 rounded-md border border-border bg-card p-2 text-center text-[11px] text-muted-foreground">
                 Image placeholder for <code>{chunk.imagePath}</code>
               </div>
             )}
           </div>
         ))}
       </div>
-    </div>
+    </CardContent>
   </div>
 );
-
